@@ -192,7 +192,24 @@ def _conv2d_forward(x, W, b, stride=1, pad=0):
     C_out, C_in, k, _ = W.shape
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    xp, _ = _pad2d(x, pad)
+    cols, idx, H_out, W_out = _im2col_from_padded(xp, k, stride)   
+
+    W_col = W.reshape(C_out, -1)                                
+    out = (W_col @ cols + b.reshape(-1, 1)).reshape(C_out, H_out, W_out)
+
+    cache = {
+        "x_shape": x.shape,
+        "W": W,
+        "b": b,
+        "stride": stride,
+        "pad": pad,
+        "xp_shape": xp.shape,
+        "cols": cols,
+        "idx": idx,
+        "H_out": H_out,
+        "W_out": W_out,
+    }
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return out, cache
@@ -251,7 +268,22 @@ def _conv2d_backward(dout, cache):
     idx = cache["idx"]
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    C_out = W.shape[0]
+
+    dout_flat = dout.reshape(C_out, -1)          
+    W_col = W.reshape(C_out, -1)                 
+
+    db = dout_flat.sum(axis=1)                   
+    dW = (dout_flat @ cols.T).reshape(W.shape)     
+    dcols = W_col.T @ dout_flat                   
+
+    dxp = _col2im_into_padded(dcols, xp_shape, idx)
+
+    C_in, H, Wd = x_shape
+    if pad > 0:
+        dx = dxp[:, pad:pad + H, pad:pad + Wd]
+    else:
+        dx = dxp
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return dx.astype(np.float64), dW.astype(np.float64), db.astype(np.float64)
@@ -300,7 +332,21 @@ def _maxpool2d_forward(x, kernel=2, stride=2):
     C, H, W = x.shape
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    cols, idx, H_out, W_out = _im2col_from_padded(x, kernel, stride)  
+    cols_reshaped = cols.reshape(C, kernel * kernel, H_out * W_out)
+
+    max_idx = np.argmax(cols_reshaped, axis=1)          
+    out = np.max(cols_reshaped, axis=1).reshape(C, H_out, W_out)
+
+    cache = {
+        "x_shape": x.shape,
+        "kernel": kernel,
+        "stride": stride,
+        "idx": idx,
+        "max_idx": max_idx,
+        "H_out": H_out,
+        "W_out": W_out,
+    }
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return out.astype(np.float64), cache
@@ -350,7 +396,15 @@ def _maxpool2d_backward(dout, cache):
     W_out = cache["W_out"]
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    dout_flat = dout.reshape(C, H_out * W_out)
+
+    dcols = np.zeros((C, kernel * kernel, H_out * W_out), dtype=dout.dtype)
+    n_idx = np.arange(H_out * W_out)
+    c_idx = np.arange(C)[:, None]
+    dcols[c_idx, max_idx, n_idx] = dout_flat
+
+    dcols = dcols.reshape(C * kernel * kernel, H_out * W_out)
+    dx = _col2im_into_padded(dcols, (C, H, W), (i, j, c))
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return dx.astype(np.float64)

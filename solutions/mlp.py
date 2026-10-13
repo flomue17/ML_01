@@ -47,7 +47,9 @@ class SquareLoss(object):
             Squared error for each element of the prediction.
         """
         # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-        raise NotImplementedError("Provide your solution here")
+        
+        return 0.5 * (y_pred - y_true) ** 2
+    
         # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     def delta(self, y_true, y_pred):
@@ -73,7 +75,9 @@ class SquareLoss(object):
             Gradient of the loss with respect to `y_pred`.
         """
         # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-        raise NotImplementedError("Provide your solution here")
+        
+        return y_pred - y_true
+        
         # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     def calculate_accuracy(self, y_true, y_pred):
@@ -120,7 +124,9 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
         been transformed by sigma(x).
     """
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+
+    return 1 / (1 + np.exp(-x))
+
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
 def dsigmoid(a: np.ndarray) -> np.ndarray:
@@ -144,7 +150,9 @@ def dsigmoid(a: np.ndarray) -> np.ndarray:
         Array of the same shape as `a`, containing the derivative values.
     """
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+
+    return a * (1 - a)
+
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
 def tanh(x: np.ndarray) -> np.ndarray:
@@ -190,7 +198,13 @@ def fc_forward(a, layer):
         Contains values needed for backward pass (e.g. input vector).
     """
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+
+    W = layer["W"]                          
+    b = layer["b"]                               
+    
+    z = np.dot(a, W) + b
+    cache = {"x": a}                   
+
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return z, cache
@@ -230,7 +244,15 @@ def fc_backward(grad, layer, cache, lr):
     W = layer["W"]                               # (in_dim, out_dim)
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    
+    dW = np.outer(x, grad)                      
+    db = grad                                   
+    grad_prev = np.dot(grad, W.T)                
+    
+    # Update weights and biases
+    layer["W"] -= lr * dW
+    layer["b"] -= lr * db
+    
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return grad_prev
@@ -261,7 +283,10 @@ def act_forward(a, func, dfunc):
     """
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+    
+    out = func(a) 
+    cache = {"dfunc": dfunc, "a": out}  
+    
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return out, cache
@@ -288,7 +313,12 @@ def act_backward(grad, cache):
     """
 
     # *****BEGINNING OF YOUR CODE (DO NOT DELETE THIS LINE)*****
-    raise NotImplementedError("Provide your solution here")
+
+    dfunc = cache["dfunc"]
+    a = cache["a"]
+    
+    grad_out = grad * dfunc(a)  
+
     # *****END OF YOUR CODE (DO NOT DELETE THIS LINE)*****
 
     return grad_out
